@@ -4,13 +4,26 @@
   <canvas id="world" width="400" height="300"></canvas>
 
   <script>
+    //find the canvas element in the DOM
     const canvas = document.getElementById("world");
+
+    //get the 2D drawing context from the canvas element (ctx)
     const ctx = canvas.getContext("2d");
 
-    const size = 100;
+    //define the size of the square being drawn
+    const size = 200;
 
+    //define the upper-left x coordinate of the square
+    const x = 50;
+
+    //define the upper-left y coordinate of the square
+    const y = 50;
+
+    //use the "fillStyle" property of the 2D drawing context of the canvas to the set the color of square to green
     ctx.fillStyle = "green";
-    ctx.fillRect(50, 50, size, size);
+
+    //uses the fillRect method of the 2D drawing context of the canvas to draw the square
+    ctx.fillRect(x, y, size, size);
   </script>
 </body>
 </html>
