@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <body>
-  <canvas id="world" width="400" height="300"></canvas>
+  <canvas id="world" width="600" height="600"></canvas>
 
   <script>
     //find the canvas element in the DOM
@@ -11,20 +11,157 @@
     const ctx = canvas.getContext("2d");
 
     //define the size of the square being drawn
-    const size = 200;
-
-    //define the upper-left x coordinate of the square
-    const x = 50;
-
-    //define the upper-left y coordinate of the square
-    const y = 50;
+    const worldSize = 30;
+    const size = 15;
 
     //use the "fillStyle" property of the 2D drawing context of the canvas to the set the color of square to green
     ctx.fillStyle = "green";
 
+    //The first two arguments identify the location we're evaluating. The next two specify the hill's center, and the last specifies its maximum height.
+    function getHill(row, col, hillRow, hillCol, height) {
+        const distance = Math.sqrt(
+            (row - hillRow) ** 2 +
+            (col - hillCol) ** 2
+        );
+
+    return Math.max(0, height - distance * 2);
+    }
+
+    let seed = 113421;
+
+    function random() {
+        seed = (seed * 16807) % 2147483647;
+        return seed / 2147483647;
+    }
+
+    const hills = [];
+
+    for (let i = 0; i < 25; i++) {
+        hills.push({
+            row: Math.floor(random() * worldSize),
+            col: Math.floor(random() * worldSize),
+            height: 5 + Math.floor(random() * 6)
+        });
+    }
+
+    function getElevation(row, col) {
+        let elevation = 0;
+
+        for (const hill of hills) {
+            elevation += getHill(
+            row,
+            col,
+            hill.row,
+            hill.col,
+            hill.height
+            );
+        }
+
+        return elevation;
+    }
+
+    const world = [];
+
+    for (let row = 0; row < worldSize; row++) {
+        const worldRow = [];
+
+        for (let col = 0; col < worldSize; col++) {
+            const elevation = getElevation(row, col);
+
+            worldRow.push({
+                elevation: elevation
+            });
+        }
+
+        world.push(worldRow);
+    }
+    
+    //generate basin
+    for (let row = 0; row < worldSize; row++) {
+        for (let col = 0; col < worldSize; col++) {
+            const distance = Math.sqrt(
+            (row - 15) ** 2 +
+            (col - 15) ** 2
+            );
+
+            const depth = Math.max(0, 10 - distance * 2);
+
+            world[row][col].elevation -= depth;
+        }
+    }
+
+    const waterLevel = 1;
+
+    for (let row = 0; row < worldSize; row++) {
+        for (let col = 0; col < worldSize; col++) {
+            const square = world[row][col];
+
+            const isEdge =
+            row === 0 ||
+            col === 0 ||
+            row === worldSize - 1 ||
+            col === worldSize - 1;
+
+            square.isOcean = isEdge && square.elevation < waterLevel;
+        }
+    }
+
+    let changed = true;
+
+    while (changed) {
+        changed = false;
+
+        for (let row = 0; row < worldSize; row++) {
+            for (let col = 0; col < worldSize; col++) {
+
+            const square = world[row][col];
+
+            if (square.isOcean) continue;
+            if (square.elevation >= waterLevel) continue;
+
+            const neighbors = [
+                [row - 1, col],
+                [row + 1, col],
+                [row, col - 1],
+                [row, col + 1]
+            ];
+
+            for (const [r, c] of neighbors) {
+                if (r < 0 || r >= worldSize) continue;
+                if (c < 0 || c >= worldSize) continue;
+
+                if (world[r][c].isOcean) {
+                square.isOcean = true;
+                changed = true;
+                break;
+                }
+            }
+            }
+        }
+    }
+
     //uses the fillRect method of the 2D drawing context of the canvas to draw the square
-    ctx.fillRect(50, 50, size, size);
-    ctx.fillRect(160, 50, size, size);
+    for (let row = 0; row < worldSize; row++) {
+        for (let col = 0; col < worldSize; col++) {
+            const x = 50 + col * size;
+            const y = 50 + row * size;
+
+            const elevation = world[row][col].elevation;
+            const brightness = Math.max(10, Math.min(90, 25 + elevation * 6));
+
+            //if elevation is below the water level, draw water
+            if (world[row][col].isOcean) {
+                ctx.fillStyle = "blue";
+            } else if (elevation < waterLevel) {
+                ctx.fillStyle = "lightblue";
+            } else {
+                ctx.fillStyle = `hsl(120, 50%, ${brightness}%)`;
+            }
+
+            ctx.fillRect(x, y, size, size);
+        }
+    }
+
   </script>
 </body>
 </html>
