@@ -65,7 +65,7 @@ let port;
    raster:atlas.renderer.geographicRaster.width*atlas.renderer.geographicRaster.height,
    viewport:[document.documentElement.scrollWidth,innerWidth]
   })`);
-  assert.equal(start.version,'atlas-1.02/backbone-1');
+  assert.equal(start.version,'atlas-1.02/backbone-2');
   assert.equal(start.main,'geography');
   assert.equal(start.planet,'backbone');
   assert.ok(start.viewport[0]<=start.viewport[1]);
