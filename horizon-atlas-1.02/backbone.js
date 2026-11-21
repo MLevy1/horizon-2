@@ -3,7 +3,7 @@
 
  const Geo = typeof module === 'object' && module.exports ?
   require('../horizon-atlas-1.01/geography.js') : root.AtlasGeography;
- const VERSION = 'atlas-1.02/backbone-1';
+ const VERSION = 'atlas-1.02/backbone-2';
  const SOURCE = 'Procedural geographic backbone · Atlas 0.01 continental envelope';
  const provenance = Object.freeze({source: SOURCE, status: 'modeled', smallestStructureKm: 0.55});
  const R = Geo.RADIUS / 1000;
@@ -70,7 +70,8 @@
 
  function random(seed, key) {
   let value = (seed | 0) ^ 2166136261;
-  for (const char of VERSION + '/' + key) value = Math.imul(value ^ char.charCodeAt(0), 16777619);
+  // Keep the first release's addressing salt when adding new terrain profiles.
+  for (const char of 'atlas-1.02/backbone-1/' + key) value = Math.imul(value ^ char.charCodeAt(0), 16777619);
   value = Math.imul(value ^ (value >>> 16), 0x45d9f3b);
   value = Math.imul(value ^ (value >>> 16), 0x45d9f3b);
   return ((value ^ (value >>> 16)) >>> 0)/4294967296;
@@ -148,6 +149,21 @@
    const path = spline(waypoints);
    include(id,'mountain belt',name,2,null,'line',path);
    include(id+'/divide','drainage divide',name+' main divide',5,id,'line',path);
+   for(const side of [-1,1]){
+    const key=id+'/foothills/'+side;
+    const flank=path.map((p,i)=>{
+     const angle=tangent(path,i)+side*Math.PI/2;
+     const distance=width*(.67+.2*Math.sin(i*.26+random(seed,key)*6.28));
+     const q=offset(p,distance*Math.cos(angle),distance*Math.sin(angle));
+     return [q[0],p[1]+Geo.wrap(q[1]-p[1])];
+    });
+    include(key,'foothill transition',name+' foothills',4,id,'line',flank);
+    for(let i=0;i<flank.length-1;i++){
+     const taper=k=>smooth(Math.min(k,flank.length-1-k)/4);
+     ribbon(key,'shoulder',flank[i],flank[i+1],width*(.88+side*.15),
+      amplitude*(.24+side*.035),taper(i),taper(i+1));
+    }
+   }
    // Outer folds follow the parent strike for several consecutive segments.
    // Their staggered ends and variable offsets leave elongated intervening valleys.
    for(const side of [-1,1]){
@@ -213,6 +229,10 @@
    const phase=random(seed,id)*2*Math.PI;
    include(id,'volcanic complex',name,4,null,'point',[point]);
    pointShape(id,'volcano',point,width,amplitude,phase);
+   const skirt=id+'/piedmont';
+   const toe=offset(point,Math.cos(phase)*width*.32,Math.sin(phase)*width*.32);
+   include(skirt,'volcanic piedmont',name+' piedmont',6,id,'point',[toe]);
+   pointShape(skirt,'piedmont',toe,width*2.8,amplitude*.19,phase);
    for(let i=0;i<6;i++){
     const key=id+'/ravine/'+i;
     const angle=phase+(i+.32*random(seed,key))*Math.PI/3;
@@ -266,7 +286,7 @@
    const p=position(lat,lon);
    const damping=smooth(z/430);
    const basement=z-.62*Math.max(z-1350,0);
-   let belt=0, divide=0, ridge=0, valley=0, volcanic=0, vents=0, lowland=0, fine=0, constraints=null;
+   let belt=0, shoulder=0, skirt=0, divide=0, ridge=0, valley=0, volcanic=0, vents=0, lowland=0, fine=0, constraints=null;
    for(const item of spatial.at(p)){
     const {frame:f,kind,width,amplitude}=item;
     if(dot(p,f.up)<.975)continue;
@@ -283,6 +303,7 @@
      const strength=item.start+(item.end-item.start)*t;
      const value=amplitude*strength*(1-smooth(distance/width));
      if(kind==='belt')belt=Math.max(belt,value);
+     else if(kind==='shoulder')shoulder=Math.max(shoulder,value);
      else if(kind==='divide')divide=Math.max(divide,value*(.35+.65*band));
      else if(kind==='ridge'||kind==='rib')ridge=Math.max(ridge,value*band);
      else if(kind==='valley'){
@@ -308,6 +329,11 @@
       volcanic=Math.max(volcanic,apron+core-gully*gullies);
       const crater=1-smooth(radius/.019);
       fine=Math.min(fine,-185*crater*(1-smooth(footprintKm/.7)));
+     } else if(kind==='piedmont'){
+      const u=(x*item.c+y*item.s)/width;
+      const v=(y*item.c-x*item.s)/width;
+      const r=Math.hypot(u/1.25,v/(.67+.22*smooth((u+1)/2)));
+      skirt=Math.max(skirt,amplitude*(1-smooth(r)));
      } else if(kind==='vent'){
       vents+=amplitude*(1-smooth(radius))*(1-smooth((footprintKm-width*.55)/width));
      } else {
@@ -325,10 +351,14 @@
    const orogen=belt+divide;
    const uplift=Math.max(orogen,volcanic)+.26*Math.min(orogen,volcanic);
    const incision=Math.max(valley+fine,-uplift*.72-140);
-   const terrain=basement+damping*(uplift+ridge+incision-lowland);
+   // Broad flanks extend beyond the core. Reduce their overlap beneath
+   // the crest so the transition builds a piedmont without stacking summits.
+   const fringe=Math.max(shoulder,skirt)+.2*Math.min(shoulder,skirt);
+   const apron=fringe*(1-.87*smooth(uplift/1500));
+   const terrain=basement+damping*(uplift+apron+ridge+incision-lowland);
    let cut=0;
    if(constraints)for(const [target,influence] of constraints)
-    cut=Math.max(cut,influence*clamp(terrain-target,0,320));
+    cut=Math.max(cut,influence*clamp(terrain-target,0,400));
    return Math.max(z*.025,terrain-cut*damping);
   }
 

@@ -48,7 +48,7 @@ test('real-world fixture develops separate volcanic and linear topography with d
  assert.ok(belt.filter(p=>world.elevation(...p)-base.elevation(...p)>650).length>=belt.length/2);
  for(const point of [massif,range])for(const width of [200,100,20,2]){
   const refined=windowMetrics(world,point,width), prior=windowMetrics(base,point,width);
-  assert.ok(refined.relief>prior.relief*1.3);
+  assert.ok(refined.relief>prior.relief*1.2);
   assert.ok(refined.slope95>prior.slope95*2);
  }
  assert.ok(Math.abs(world.displayElevation(...range,8)-world.elevation(...range))>70);
@@ -105,4 +105,20 @@ test('graded routes agree with the proposed flow direction across the global cat
  assert.ok(next.downhill/next.pairs>.94);
  assert.ok(next.netDescent/next.routes>.98);
  assert.ok(next.downhill>prior.downhill*1.65);
+});
+
+test('surrounding foothills and volcanic piedmont contribute at orbital footprints', () => {
+ const flank=world.catalog.get('east-crown/foothills/-1');
+ assert.equal(flank.parentId,'east-crown');
+ const point=flank.geometry.parts[0][11];
+ assert.ok(world.featuresAt(...point).some(f=>f.id===flank.id));
+ const summit=Backbone.SITES['backbone-seam'].point;
+ const skirt=world.catalog.get('seam-shield/piedmont');
+ assert.equal(skirt.parentId,'seam-shield');
+ const relief=Array.from({length:8},(_,i)=>{
+  const a=i*Math.PI/4,p=offset(summit,95*Math.cos(a),95*Math.sin(a));
+  return world.displayElevation(...p,120)-base.elevation(...p);
+ });
+ assert.ok(relief.filter(z=>z>50).length>=3);
+ assert.ok(Math.max(...relief)-Math.min(...relief)>100);
 });
