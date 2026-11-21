@@ -1,0 +1,4 @@
+# Preserve the exact bytes recorded for these frozen release artifacts.
+/horizon-056.html -text
+/horizon-0.04.html -text
+/horizon-0.04/world-source.js -text

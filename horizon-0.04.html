@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Horizon 0.04 — Water Integration and Shoreline Reconstruction</title>
+<link rel="stylesheet" href="horizon-0.01/explorer.css">
+<script defer src="horizon-0.01/vendor/three-r160.1.min.js"></script>
+<script defer src="horizon-0.04/world-source.js"></script>
+<script defer src="horizon-0.04/stream.js"></script>
+<script defer src="horizon-0.04/surface-pattern.js"></script>
+<script defer src="horizon-0.04/renderer.js"></script>
+<link rel="stylesheet" href="horizon-0.02/diagnostics.css">
+<script defer src="horizon-0.02/diagnostics.js"></script>
+<link rel="stylesheet" href="horizon-0.04/render-diagnostics.css">
+<script defer src="horizon-0.04/render-diagnostics.js"></script>
+<script defer src="horizon-0.04/explorer.js"></script>
+</head>
+<body>
+<canvas id="world" tabindex="0" aria-label="3D world view. Use WASD to move and arrow keys to look."></canvas>
+<header class="toolbar">
+ <div class="brand"><strong>Horizon</strong> <span>0.04</span></div>
+ <label class="sr" for="site">Start location</label>
+ <select id="site" disabled><option value="">Loading Atlas locations…</option></select>
+ <div class="modes" aria-label="Movement mode">
+  <button id="walk" aria-pressed="false" title="Walk">Walk</button>
+  <button id="flight" aria-pressed="true" title="Fly">Fly</button>
+ </div>
+ <label class="speed" for="speed">Flight speed
+  <select id="speed"><option value="7">7 m/s</option><option value="35" selected>35 m/s</option><option value="120">120 m/s</option><option value="380">380 m/s</option></select>
+ </label>
+ <button id="site-diagnostics" aria-expanded="false" aria-controls="atlas-diagnostics">Atlas data</button>
+ <button id="render-toggle" aria-expanded="false" aria-controls="render-diagnostics">Render</button>
+ <details id="info"><summary>Info</summary><p id="environment">Atlas 0.01</p><p id="performance"></p></details>
+</header>
+<aside id="atlas-diagnostics" hidden aria-labelledby="atlas-diagnostics-title">
+ <header><h1 id="atlas-diagnostics-title">Atlas site diagnostics</h1><button id="diagnostics-close" aria-label="Close Atlas diagnostics">Close</button></header>
+ <p id="diagnostics-site" role="status"></p>
+ <div id="diagnostics-fields"></div>
+ <p id="diagnostics-source"></p>
+</aside>
+<aside id="render-diagnostics" hidden aria-labelledby="render-title">
+ <header><h1 id="render-title">Render diagnostics</h1><button id="render-close">Close</button></header>
+ <fieldset>
+  <legend>Layers</legend>
+  <label><input type="checkbox" value="slope"> Terrain slope (blue to orange)</label>
+  <label><input type="checkbox" value="chunks"> Chunk edges (white)</label>
+  <label><input type="checkbox" value="water"> Water classes, banks and stage errors</label>
+  <label><input type="checkbox" value="lod"> LOD transitions (amber)</label>
+  <label><input type="checkbox" value="material"> Ground material colors</label>
+  <label><input type="checkbox" value="coverage"> Canopy coverage (green)</label>
+  <label><input type="checkbox" value="canopy" checked> Distant canopy shading</label>
+  <label><input type="checkbox" value="trees" checked> Individual trees</label>
+ </fieldset>
+ <p id="render-material-key" hidden>Gray rock · blue-gray gravel · gold sand · brown soil · dark-brown litter · olive moss/biocrust · green low vegetation</p>
+ <p id="render-water-key" hidden>Green river · blue lake · cyan ocean · turquoise marine inundation · violet tidal influence · white bank · orange stage error ≥1 m. Toggle LOD for amber joins.</p>
+ <output id="render-metrics"></output>
+ <button id="render-sample">Compare ground below camera</button>
+ <output id="render-audit" role="status"></output>
+</aside>
+<div id="bearing" class="bearing" aria-hidden="true">N</div>
+<div class="reticle" aria-hidden="true"></div>
+<div class="position"><output id="position">Loading world…</output><span id="resolution"></span></div>
+<div id="status" class="status" role="status">Preparing the frozen Atlas world…</div>
+<div class="help">WASD move · drag or click to look · Space / Shift ascend / descend · F toggles flight</div>
+<div class="touch">
+ <div id="stick" class="stick" aria-label="Touch movement control"><i></i></div>
+ <div class="altitude"><button id="ascend" aria-label="Ascend">↑</button><button id="descend" aria-label="Descend">↓</button></div>
+</div>
+<noscript>Horizon requires JavaScript and hardware-accelerated WebGL.</noscript>
+</body>
+</html>
+

@@ -1,0 +1,12 @@
+#render-diagnostics{position:fixed;z-index:5;top:max(69px,calc(env(safe-area-inset-top) + 63px));left:max(12px,env(safe-area-inset-left));width:min(432px,calc(100% - 24px));max-height:calc(100vh - 148px);max-height:calc(100dvh - 148px);overflow:auto;overscroll-behavior:contain;padding:12px;background:var(--glass);border:1px solid var(--border);border-radius:10px;font-size:.85rem}
+#render-diagnostics header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#render-diagnostics h1{font-size:1rem;margin:0}
+#render-diagnostics fieldset{margin:9px 0;padding:3px 8px 6px;border:1px solid var(--border);border-radius:7px}
+#render-diagnostics label{display:flex;align-items:center;gap:5px;min-height:31px;cursor:pointer}
+#render-diagnostics input{accent-color:var(--accent)}
+#render-diagnostics output{display:block;white-space:pre-line;line-height:1.45;overflow-wrap:anywhere;font-variant-numeric:tabular-nums;margin:8px 0}
+#render-diagnostics output:empty{display:none}
+#render-material-key{color:#cddcda;line-height:1.4}
+@media(max-width:680px){#render-toggle{order:2}#render-diagnostics{top:max(146px,calc(env(safe-area-inset-top) + 135px));max-height:calc(100vh - 225px);max-height:calc(100dvh - 225px)}#render-diagnostics label{min-height:37px}}
+@media(pointer:coarse) and (max-height:480px){#render-diagnostics{max-height:calc(100dvh - 158px)}}
+#render-water-key{color:#cddcda;line-height:1.4}
